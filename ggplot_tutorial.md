@@ -1,42 +1,10 @@
----
-title: "A Beginner's Guide to the ggplot2 package"
-author: "Mohin Banker"
-date: "7/24/2017"
-output: 
-  html_document:
-    toc: true
-    keep_md: true
----
+# A Beginner's Guide to the ggplot2 package
+Mohin Banker  
+7/24/2017  
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, error = FALSE, cache = F)
-```
 
-```{r packages, echo = F, message= F, warning = F, results='hide', cache = F}
-###########################################
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
-# !!!! RUN THIS CODE BEFORE KNITTING !!!! #
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
-###########################################
 
-# You have to install packages before knitting
 
-ipak <- function(pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg)) 
-    install.packages(new.pkg, dependencies = TRUE)
-  sapply(pkg, require, character.only = TRUE)
-}
-
-# Installing and loading packages
-
-packages <- c("data.table", "tidyverse", "ggthemes", "cowplot",
-              "gganimate", "gapminder", "forcats", "ggmap", "scales")
-ipak(packages)
-
-gapminder <- data.table(gapminder)
-theme_set(theme_gray())
-```
 
 # What is ggplot2?
 
@@ -67,7 +35,8 @@ The answer to this question depends on your data. How many variables are you plo
 ### Continuous variable
 For univariate graphics, you are trying to see the distribution of the data, or the density of the variable across value ranges. For a continuous variable, you would use a histogram, where the x-axis are value ranges or "bins", and the y-axis is the frequency or density of that bin. Histograms work for small or large data. *Boxplots* or *violin plots* accomplish the same task and can facet the distribution by different factors. 
 
-```{r continuous_univariate}
+
+```r
 ggplot(data = gapminder, aes(x = lifeExp
                              # ,y = ..density.. # Add this line to switch from frequency to density
                              )) +
@@ -76,27 +45,40 @@ ggplot(data = gapminder, aes(x = lifeExp
   labs(x = "Life Expectancy (Years)", y = "Count of Countries", title = "Histogram of Life Expectancy")
 ```
 
+![](ggplot_tutorial_files/figure-html/continuous_univariate-1.png)<!-- -->
+
 ### Categorical variables
 For categorical variables, you want visualize the count or proportion for each category of the variable. In most cases, you would want to use a **bar chart**. While pie charts can be occasionally useful to emphasize percentages of a whole, I would stay away from them because it's difficult estimate and compare two slices of a pie.
 
-```{r categorical_univariate}
+
+```r
 ggplot(data = gapminder[, .(num_countries = length(unique(country))), .(continent)], # Transforming dataset within function
        aes(x = reorder(continent, -num_countries), y = num_countries, fill = continent)) +
   geom_bar(stat = "identity") +
   labs(x = "Continent", y = "Number of Observations", title = "Bar Chart of Countries by Continent") +
   guides(fill = F)
+```
 
+![](ggplot_tutorial_files/figure-html/categorical_univariate-1.png)<!-- -->
+
+```r
 ggplot(data = gapminder[, .(num_countries = length(unique(country))), .(continent)], # Transforming dataset within function
        aes(x = "", y = num_countries, fill = continent)) +
   geom_bar(stat = "identity", width = 0.2) +
   labs(x = "", y = "Number of Observations", title = "Stacked Bar Chart of Countries by Continent", fill = "Continent")
+```
 
+![](ggplot_tutorial_files/figure-html/categorical_univariate-2.png)<!-- -->
+
+```r
 ggplot(data = gapminder[, .(num_countries = length(unique(country))), .(continent)], # Transforming dataset within function
        aes(x = "", y = num_countries, fill = continent)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y", start = 0) +
   labs(title = "Pie Chart of Countries by Continent", fill = "Continent", y = "", x = "")
 ```
+
+![](ggplot_tutorial_files/figure-html/categorical_univariate-3.png)<!-- -->
 
 
 ## Multivariate graphics
@@ -106,19 +88,28 @@ Multivariate graphics are intended to show you the relationship between two or m
 For two continuous variables, the simplest graph is a scatterplot. If you want to include additional continuous or categorical variables in the scatterplot, you can control the size, color, shape, and opacity of the points. You can also use regression lines (which can also be split by a categorical variable) to show the overall shape of the data. 
 
 For extremely large datasets where points can blend together, it can be useful to make points more transparent to show striations in density. Alternatively, instead of a scatterplot, you can use a heatmap or a countour plot. Countour plots can also be used to show a third continuous 'z' variable in a flattened 2-D plot.
-```{r}
+
+```r
 ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, color = continent, size = pop)) +
   geom_point() +
   scale_size_continuous(breaks = c(2.5*10^8, 5*10^8, 7.5*10^8, 1*10^9, 1.25*10^9), labels = c("250M", "500M", "750M", "1B", "1.25B")) +
   scale_x_log10() +
   labs(x = "Log GDP per Capita", y = "Life Expectancy (Years)", color = "Continent", size = "Population", title = "Scatterplot of Life Expectancy vs. GDP per Capita")
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
+
+```r
 ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, size = pop)) +
   geom_density_2d() +
   scale_size_continuous(breaks = c(2.5*10^8, 5*10^8, 7.5*10^8, 1*10^9, 1.25*10^9), labels = c("250M", "500M", "750M", "1B", "1.25B")) +
   scale_x_log10() +
   labs(x = "Log GDP per Capita", y = "Life Expectancy (Years)", color = "Continent", size = "Population", title = "Contour Plot of Life Expectancy vs. GDP per Capita")
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-1-2.png)<!-- -->
+
+```r
 ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, group = continent, color = continent)) +
   geom_smooth(method = "lm") +
   scale_size_continuous(breaks = c(2.5*10^8, 5*10^8, 7.5*10^8, 1*10^9, 1.25*10^9), labels = c("250M", "500M", "750M", "1B", "1.25B")) +
@@ -126,10 +117,13 @@ ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, group = con
   labs(x = "Log GDP per Capita", y = "Life Expectancy (Years)", color = "Continent", size = "Population", title = "Line Graph of Life Expectancy vs. GDP per Capita")
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-1-3.png)<!-- -->
+
 ## Continuous vs Categorical
 These are essentially an extension of univariate categorical graphics. Boxplots are most commonly used, but faceted or stacked histograms are also possible. A simple bar chart would also suffice; bar charts can include another categorical variable by transforming them into either stacked or multiple (known as dodged) bar charts. 
 
-```{r}
+
+```r
 gapminder[, popCategory := cut(pop, breaks = quantile(pop, seq(0, 1, 0.5)),
                                labels = c("Small", "Big"))]
 
@@ -137,18 +131,25 @@ ggplot(data = gapminder, aes(x = continent, y = lifeExp, fill = continent)) +
   geom_violin() +
   labs(y = "Life Expectancy (Years)", x = "Continent", title = "Violin Plot of Life Expectancy") +
   guides(fill = F)
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+```r
 ggplot(data = na.omit(gapminder), aes(x = continent, y = lifeExp, fill = popCategory)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(y = "Life Expectancy (Years)", x = "Continent", title = "Multiple Bar Chart of Life Expectancy", fill = "Country Population Size")
 ```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-2-2.png)<!-- -->
 
 
 
 ## Categorical vs. Categorical
 These are more difficult to show, but are best shown through a stacked or multiple (dodged) bar chart. One of the categorical variables must be converted to a percentage for these visualizations. For smaller datasets, using a scatterplot with jittered points is possible. For larger datasets, a heatmap is also possible.
 
-```{r}
+
+```r
 ggplot(data = gapminder[year == 2007], aes(x = continent, y = popCategory, col = continent)) +
   geom_jitter(height = 0.2) +
   geom_text(aes(label = ifelse(continent == "Oceania", as.character(country), "")),
@@ -156,6 +157,8 @@ ggplot(data = gapminder[year == 2007], aes(x = continent, y = popCategory, col =
   labs(x = "Continent", y = "Population Size", main = "Jittered Scatterplot of Population Size by Continent") +
   theme(legend.position="none")
 ```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 
 
@@ -175,20 +178,16 @@ When you are only doing exploratory analysis and graphs don't need polish, the b
 
 ## Comparing plotting times for a simple scatterplot with 10k observations
 
-```{r echo = F, comment = NA, cache = F}
-temp <- data.table(x = runif(10000), y = rnorm(10000))
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
+```
+0.3245468 seconds
+```
 
-before <- Sys.time()
-plot(y ~ x, data = temp, main = "Base R")
-cat(Sys.time() - before, "seconds")
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-4-2.png)<!-- -->
 
-before <- Sys.time()
-g <- ggplot(data = temp, aes(x = x, y = y)) +
-  geom_point() +
-  labs(title = "ggplot")
-g
-cat(Sys.time() - before, "seconds")
+```
+0.5078659 seconds
 ```
 
 # The Actual Plotting
@@ -241,7 +240,8 @@ If data and aesthetics weren't specified in the `ggplot()` function, then they m
 If you want a full list of all the layers and functions included in the ggplot2 package, check out the [reference guide](http://ggplot2.tidyverse.org/reference/).
 
 Since I didn't include any plots demonstrating faceting, here's an example:
-```{r}
+
+```r
 ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, color = year, size = pop)) +
   geom_point() +
   facet_grid(. ~ continent) +
@@ -250,66 +250,95 @@ ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, color = year, size = po
   labs(x = "Log GDP per Capita", y = "Life Expectancy (Years)", color = "Year", size = "Population", title = "Scatterplot of Life Expectancy vs. GDP per Capita")
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 
 ## Building a plot layer by layer
 This plot and data was taken with permission from Peter Fontana.
 We first draw an empty rectangle to show an empty plot.
 
-```{r}
+
+```r
 baseball <- fread("baseball_salaries.csv")
 hist_plot_1 <- ggplot()
 hist_plot_1 + theme(panel.border     = element_rect(fill = NA, colour = "grey20"))
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 Then, we add a simple histogram of basaeball player salaries (from the 1986-1987 season).
 
-```{r}
+
+```r
 hist_plot_1 +  geom_histogram(data=baseball,aes(x=Salary, y=..count..),binwidth=250,closed="left")
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 Then, we add color to the bars of the histogram to emphasize the count in each bar.
-```{r}
+
+```r
 hist_plot_2 <- hist_plot_1 + geom_histogram(data=baseball,aes(x=Salary, y=..count..,fill=..count..),binwidth=250,color="black",closed="left")
 hist_plot_2
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 Now, we overlay another smaller histogram to show a more granular distribution. It's important that we plotted this after the first histogram; otherwise, it would have been covered.
-```{r}
+
+```r
 hist_plot_3 <- hist_plot_2 + geom_histogram(data=baseball,aes(x=Salary,y=..count..), binwidth=25, color="black", fill=rgb(255,255,255,max=255), closed="left")
 hist_plot_3
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 Then, we add text above each bar to display the count in each bar of the histogram using `geom_text`.
 
-```{r}
+
+```r
 hist_plot_4 <- hist_plot_3 + geom_text(data=baseball, aes(x=Salary, label=..count.., vjust=-1),stat="bin",binwidth=250,size=4,closed="left")
 hist_plot_4
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
 Next, we change the color palette of the larger histogram through `scale_fill_gradient`.
 
-```{r}
+
+```r
 hist_plot_5 <- hist_plot_4 +  scale_fill_gradient(low=rgb(127,0,255,max=255),high=rgb(0,0,255,max=255),name="Number of \nPlayers")
 hist_plot_5
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
 The axis labels are a bit too spaced out and far away. We modify the axes labels so that 0's appear closer to the origin with `scale_x_continuous` and `scale_y_continuous`.
-```{r}
+
+```r
 hist_plot_6 <- hist_plot_5 + scale_x_continuous(expand= c(0,0)) + scale_y_continuous(expand=c(0,0))
 hist_plot_6
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 The text for our largest bar is outside of the window, so we have to change the limits of the y-axis through `coord_cartesian`.
-```{r}
+
+```r
 hist_plot_7 <- hist_plot_6 +  coord_cartesian(ylim=c(0,120))
 hist_plot_7
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+
 Finally, we add labels and title. This is our final graph!
-```{r}
+
+```r
 hist_plot_f <- hist_plot_7 + labs(title = "Histogram of Players' Salaries", x = "Salary ($K)", y = "Number of Players") 
 hist_plot_f
 ```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 
 
@@ -318,7 +347,8 @@ Themes are ways of specifying fonts, styles, and color schemes for your graphs. 
 
 There are additional themes found in the `ggthemes` packages that range from a solarized color scheme to styles imitating the Economist. Here are a few examples:
 
-```{r}
+
+```r
 run <- fread("run.csv")
 
 g <- ggplot(data = run, aes(x = time_index/60, y = speed_mph, group = run, col = as.factor(run))) +
@@ -327,17 +357,50 @@ g <- ggplot(data = run, aes(x = time_index/60, y = speed_mph, group = run, col =
        col = "Run Number", title = "Arjun's Speed When Running")
   
 g + labs(subtitle = "Gray Theme")
+```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+
+```r
 g + theme_bw() + labs(subtitle = "B&W Theme")
+```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-2.png)<!-- -->
+
+```r
 g + theme_economist() + labs(subtitle = "Economist Theme") + scale_color_economist()
+```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-3.png)<!-- -->
+
+```r
 g + theme_solarized() + labs(subtitle = "Solarized Theme") + scale_color_solarized()
+```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-4.png)<!-- -->
+
+```r
 g + theme_solarized(light = F) + labs(subtitle = "Dark Solarized Theme") + scale_color_solarized()
+```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-5.png)<!-- -->
+
+```r
 g + theme_fivethirtyeight() + labs(subtitle = "FiveThirtyEight Theme") + scale_color_fivethirtyeight()
+```
+
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-6.png)<!-- -->
+
+```r
 g + theme_stata() + labs(subtitle = "Stata Theme") + scale_color_stata()
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-15-7.png)<!-- -->
+
 Here's an example of how to create your own theme from scratch:
 
-```{r}
+
+```r
 # theme code
 theme_bw_pf <- function(base_size = 11, base_family = "sans", title_family="serif") {
   # Starts with theme_grey and then modify some parts
@@ -376,27 +439,48 @@ Unfortunately, since all arguments are contained within one function, it is hard
 ## Maps and Animations in an Example
 
 ### Maps
-```{r}
+
+```r
 # Scatterplots
 ggplot(data = run, aes(x = lon, y = lat)) +
   geom_point()
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
+```r
 # Specify color of the point
 ggplot(data = run, aes(x = lon, y = lat, col = run)) +
   geom_point()
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-17-2.png)<!-- -->
+
+```r
 # Switch from a continuous scale to a discrete scale
 ggplot(data = run, aes(x = lon, y = lat, col = as.factor(run))) +
   geom_point()
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-17-3.png)<!-- -->
+
+```r
 # Only graph a subset of the data
 ggplot(data = run[run != 4], aes(x = lon, y = lat, col = as.factor(run))) +
   geom_point()
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-17-4.png)<!-- -->
+
+```r
 # Change to a connected line graph, and add in size to describe elevation
 ggplot(data = run[run != 4], aes(x = lon, y = lat, col = as.factor(run), size = ele, group = run)) +
   geom_path()
+```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-17-5.png)<!-- -->
+
+```r
 # Overlay a map
 run <- run[run != 4]
 
@@ -408,9 +492,12 @@ ggmap(map) +
   labs(x = "Longitude", y = "Latitude", main = "Arjun's Runs over 7 Days")
 ```
 
+![](ggplot_tutorial_files/figure-html/unnamed-chunk-17-6.png)<!-- -->
+
 ### Animation
 The `gganimate` package adds in a new aesthetic, called "frame". This aesthetics specifies a variable that the plot will animate over, usually some kind of time variable. Then, by calling the `gganimate()` function, an animated file is produced. Unfortunately, I don't have much experience with this package, and had trouble getting it to work.
-```{r}
+
+```r
 p <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, color = continent, frame = year)) +
   geom_point() +
   scale_x_log10()
